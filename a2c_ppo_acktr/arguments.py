@@ -153,6 +153,19 @@ def get_args():
         action='store_true',
         default=False,
         help='use a linear schedule on the learning rate')
+    parser.add_argument(
+        '--noisy-train',
+        action='store_true',
+        default=True,
+        help='add random uniform noise during training')
+    parser.add_argument(
+        '--noisy-epsilon',
+        default=0.05,
+        help='random uniform noise strength during training')
+    parser.add_argument(
+        '--noisy-chance',
+        default=0.5,
+        help='random uniform noise chance during training')
     args = parser.parse_args()
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()

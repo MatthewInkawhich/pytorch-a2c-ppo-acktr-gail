@@ -19,6 +19,7 @@ from a2c_ppo_acktr.envs import make_vec_envs
 from a2c_ppo_acktr.model import Policy
 from a2c_ppo_acktr.storage import RolloutStorage
 from evaluation import evaluate
+from noise import prep_input
 
 
 def main():
@@ -104,6 +105,7 @@ def main():
                               actor_critic.recurrent_hidden_state_size)
 
     obs = envs.reset()
+    obs = prep_input(obs, noise=args.noisy_train, epsilon=args.noisy_epsilon, chance=args.noisy_chance, device=device)
     rollouts.obs[0].copy_(obs)
     rollouts.to(device)
 
@@ -128,7 +130,10 @@ def main():
                     rollouts.masks[step])
 
             # Obser reward and next obs
-            obs, reward, done, infos = envs.step(action)
+            obs, reward, done, infos = envs.step(action)        
+            obs = prep_input(obs, noise=args.noisy_train, epsilon=args.noisy_epsilon, chance=args.noisy_chance, device=device)
+            #print("obs:", obs, obs.size(), obs.min(), obs.max())
+            #exit()
 
             for info in infos:
                 if 'episode' in info.keys():
