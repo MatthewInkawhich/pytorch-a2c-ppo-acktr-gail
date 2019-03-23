@@ -1,5 +1,6 @@
 import copy
 import glob
+import csv
 import os
 import time
 from collections import deque
@@ -22,6 +23,17 @@ from evaluation import evaluate
 
 def main():
     args = get_args()
+
+    # Initialze csv
+    log_path = os.path.join(args.save_dir, args.algo, "logs")
+    if not os.path.isdir(log_path):
+        os.mkdir(log_path)
+    csv_file = open(os.path.join(log_path, args.run_name + '.csv'), 'w')
+    fieldnames = ['time_steps', 'avg_reward']
+    csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames, delimiter=',')
+    csv_writer.writeheader()
+    csv_file.flush()
+
 
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed_all(args.seed)
@@ -168,10 +180,12 @@ def main():
             except OSError:
                 pass
 
-            torch.save([
-                actor_critic,
-                getattr(utils.get_vec_normalize(envs), 'ob_rms', None)
-            ], os.path.join(save_path, args.env_name + ".pt"))
+            torch.save({'policy_net_sd':actor_critic.state_dict()}, os.path.join(save_path, args.run_name + ".pt"))
+
+            #torch.save([
+            #    actor_critic,
+            #    getattr(utils.get_vec_normalize(envs), 'ob_rms', None)
+            #], os.path.join(save_path, args.env_name + ".pt"))
 
         if j % args.log_interval == 0 and len(episode_rewards) > 1:
             total_num_steps = (j + 1) * args.num_processes * args.num_steps
@@ -184,6 +198,10 @@ def main():
                         np.median(episode_rewards), np.min(episode_rewards),
                         np.max(episode_rewards), dist_entropy, value_loss,
                         action_loss))
+            csv_writer.writerow({'time_steps': total_num_steps,
+                                 'avg_reward': np.mean(episode_rewards)})
+            csv_file.flush()
+
 
         if (args.eval_interval is not None and len(episode_rewards) > 1
                 and j % args.eval_interval == 0):

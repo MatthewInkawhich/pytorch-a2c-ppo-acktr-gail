@@ -130,6 +130,10 @@ def get_args():
         default='./trained_models/',
         help='directory to save agent logs (default: ./trained_models/)')
     parser.add_argument(
+        '--run-name',
+        default='test',
+        help='.pt model file will be saved as this (default: test)')
+    parser.add_argument(
         '--no-cuda',
         action='store_true',
         default=False,
